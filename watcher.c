@@ -10,7 +10,6 @@ char*  setup(){
     {
         printf("Create a new path for monitoring ? (y/n)\n");
         scanf(" %c", &answer);
-        //printf("%c", answer);
         retry++;
 
         if(answer == 'y' || answer == 'n') break;
@@ -63,6 +62,11 @@ int monitor(const char* path){
     int wd;
     char buf[BUF_LEN] __attribute__((aligned(4)));
     ssize_t len, i = 0;
+    FILE *fp;
+    time_t timenow;
+
+    fp = fopen("log.txt", "w");
+    fclose(fp);
     
     /*Love - Linux System Programming (O'Reilly, 2007) - Page 238*/
     fd = inotify_init ( );
@@ -85,6 +89,11 @@ int monitor(const char* path){
         /* loop over every read event until none remain */
         while (i < len) 
         {
+            time(&timenow);
+            char *curr_time = ctime(&timenow);
+            curr_time[strlen(curr_time)-1] = '\0';
+
+            fp = fopen("log.txt", "a");
             struct inotify_event *event = (struct inotify_event *) &buf[i];
 
             /*cases that interest us:
@@ -95,19 +104,35 @@ int monitor(const char* path){
             {
                 if(event->len)
                 {
-                    (event->mask & IN_ISDIR) ? 
-                    printf("The following directory was created in Path: %s\n", event->name) : 
-                    printf("The following file was created in Path: %s\n", event->name);
+                    if(event->mask & IN_ISDIR)
+                    {
+                        printf("The following directory was created in Path: %s\n", event->name);
+                        fprintf(fp, "%s - The following directory was created in Path: %s\n", curr_time, event->name);
+                    }
+                    else
+                    {
+                        printf("The following file was created in Path: %s\n", event->name);
+                        fprintf(fp, "%s - The following file was created in Path: %s\n", curr_time, event->name);
+                    }
                 }
             }
 
-            if(event->mask & IN_DELETE) printf("File : %s was deleted from Path\n", event->name);
+            if(event->mask & IN_DELETE) 
+            {
+                printf("File : %s was deleted from Path\n", event->name);
+                fprintf(fp, "%s - File : %s was deleted from Path\n", curr_time, event->name);
+            }
 
-            if(event->mask & IN_ACCESS) printf ("The directory was read from!\n");
+            if(event->mask & IN_ACCESS)
+            {
+                printf ("The directory was read from!\n");
+                fprintf (fp, "%s - The directory was read from!\n", curr_time);
+            }
 
 
             /* update the index to the start of the next event */
             i += sizeof(struct inotify_event) + event->len;
+            fclose(fp);
         }
         len = 0;
         i = 0;
