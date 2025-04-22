@@ -1,10 +1,12 @@
 #include "watcher.h"
 
-char*  setup(){
-    char answer='\0';
+Preferences  setup(){
+    char answer = '\0';
+    char notification = '\0';
     int retry = 0;
     char *path;
     int path_len = 0;
+    Preferences choices;
 
     while(retry < 3)
     {
@@ -44,20 +46,48 @@ char*  setup(){
             fprintf(stderr, "error while trying to create %s\n", p);
         }
         free(p);
-        return path;
+        //return path;
+        choices.path = path;
         break;
     case 'n':
         printf("Specify path to watch (full path):\n");
         path = readline("Enter full path: ");
-        return path;
+        //return path;
+        choices.path = path;
         break;
     default:
         break;
     }
 
+    printf("Do you want to be notified every time an action occurs on the Path ? (y/n)\n");
+    scanf(" %c", &notification);
+    switch (notification)
+    {
+    case 'y':
+        choices.notification = 1;
+        break;
+    case 'n':
+        choices.notification = 0;
+        break;
+    default:
+        choices.notification = -1;
+        break;
+    }
+
+    return choices;
+
 }
 
-int monitor(const char* path){
+void notify(const int notification){
+    int fd;
+
+    if(notification)
+    {
+        system("notify-send Watcher \"A action has occured in your path. See log file.\"");
+    }
+}
+
+int monitor(const Preferences choices){
     int fd;
     int wd;
     char buf[BUF_LEN] __attribute__((aligned(4)));
@@ -75,7 +105,7 @@ int monitor(const char* path){
         exit (EXIT_FAILURE);
     }
 
-    wd = inotify_add_watch (fd, path, IN_ACCESS | IN_MODIFY | IN_CREATE | IN_DELETE);
+    wd = inotify_add_watch (fd, choices.path, IN_ACCESS | IN_MODIFY | IN_CREATE | IN_DELETE);
     if (wd == -1) 
     {
         perror ("inotify_add_watch");
@@ -133,6 +163,7 @@ int monitor(const char* path){
             /* update the index to the start of the next event */
             i += sizeof(struct inotify_event) + event->len;
             fclose(fp);
+            notify(choices.notification);
         }
         len = 0;
         i = 0;

@@ -16,8 +16,15 @@
 
 #define BUF_LEN (10 * (sizeof(struct inotify_event) + NAME_MAX + 1))
 
-char* setup();
-int monitor(const char*);
+typedef struct{
+    char *path;
+    int notification;
+} Preferences;
+
+
+Preferences setup();
+void notify(const int);
+int monitor(const Preferences);
 
 
 
