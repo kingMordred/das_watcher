@@ -6,6 +6,7 @@
     - Run as a daemon process (background service)
     - Maybe make a graphical interface
     - Add some sort of notification system
+    - Add sig to terminate program
 */
 
 #include "watcher.h"

@@ -71,7 +71,7 @@ int monitor(const char* path){
         exit (EXIT_FAILURE);
     }
 
-    wd = inotify_add_watch (fd, path, IN_ACCESS | IN_MODIFY);
+    wd = inotify_add_watch (fd, path, IN_ACCESS | IN_MODIFY | IN_CREATE | IN_DELETE);
     if (wd == -1) 
     {
         perror ("inotify_add_watch");
@@ -81,19 +81,36 @@ int monitor(const char* path){
     while (1)
     {
         /* read BUF_LEN bytes' worth of events */
-    len = read (fd, buf, BUF_LEN);
-    /* loop over every read event until none remain */
-    while (i < len) 
-    {
-        struct inotify_event *event = (struct inotify_event *) &buf[i];
-        printf ("wd=%d mask=%d cookie=%d len=%d dir=%s\n", event->wd, event->mask, event->cookie, event->len, (event->mask & IN_ISDIR) ? "yes" : "no");
-        /* if there is a name, print it */
-        if (event->len) printf ("name=%s\n", event->name);
-        /* update the index to the start of the next event */
-        i += sizeof(struct inotify_event) + event->len;
-    }
-    len = 0;
-    i = 0;
+        len = read (fd, buf, BUF_LEN);
+        /* loop over every read event until none remain */
+        while (i < len) 
+        {
+            struct inotify_event *event = (struct inotify_event *) &buf[i];
+
+            /*cases that interest us:
+            - Directory is read from
+            - Dir is written to ; specify if a file or dir was written
+            */
+            if(event->mask & IN_CREATE)
+            {
+                if(event->len)
+                {
+                    (event->mask & IN_ISDIR) ? 
+                    printf("The following directory was created in Path: %s\n", event->name) : 
+                    printf("The following file was created in Path: %s\n", event->name);
+                }
+            }
+
+            if(event->mask & IN_DELETE) printf("File : %s was deleted from Path\n", event->name);
+
+            if(event->mask & IN_ACCESS) printf ("The directory was read from!\n");
+
+
+            /* update the index to the start of the next event */
+            i += sizeof(struct inotify_event) + event->len;
+        }
+        len = 0;
+        i = 0;
     }
     
 }
