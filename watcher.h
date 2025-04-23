@@ -13,6 +13,8 @@
 #include <unistd.h>
 #include <time.h>
 #include <string.h>
+#include <fcntl.h>
+#include <sys/resource.h>
 
 #define BUF_LEN (10 * (sizeof(struct inotify_event) + NAME_MAX + 1))
 

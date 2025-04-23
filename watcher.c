@@ -83,7 +83,7 @@ void notify(const int notification){
 
     if(notification)
     {
-        system("notify-send Watcher \"A action has occured in your path. See log file.\"");
+        system("notify-send Watcher \"An action has occured in your path. See log file.\"");
     }
 }
 
