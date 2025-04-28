@@ -1,9 +1,11 @@
-/* To Do
+/* 
+    V1 - Use killall watcher to terminate program as it is a daemon.
+
+    To Do
     - Add support to monitor multiple directories ?
     - Trigger shell commands on specific events ?
     - Maybe make a graphical interface ?
-    - Add sig to terminate program and cleanup
-    - Can we log which process did what ?
+    - Can we log which process did what ? => would have to use fanotify instead 
 */
 
 #include "watcher.h"
